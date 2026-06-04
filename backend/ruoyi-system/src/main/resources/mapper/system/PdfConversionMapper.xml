@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.PdfConversionMapper">
+    
+    <resultMap type="PdfConversion" id="PdfConversionResult">
+        <result property="id"    column="id"    />
+        <result property="attachmentId"    column="attachment_id"    />
+        <result property="originalFilename"    column="original_filename"    />
+        <result property="pdfFilename"    column="pdf_filename"    />
+        <result property="pdfStorePath"    column="pdf_store_path"    />
+        <result property="pdfFileSize"    column="pdf_file_size"    />
+        <result property="lastAccessTime"    column="last_access_time"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectPdfConversionVo">
+        select id, attachment_id, original_filename, pdf_filename, pdf_store_path, pdf_file_size, last_access_time, created_time, updated_time from pdf_conversion
+    </sql>
+
+    <select id="selectPdfConversionList" parameterType="PdfConversion" resultMap="PdfConversionResult">
+        <include refid="selectPdfConversionVo"/>
+        <where>  
+            <if test="attachmentId != null">and attachment_id = #{attachmentId}</if>
+            <if test="originalFilename != null and originalFilename != ''">and original_filename like concat('%', #{originalFilename}, '%')</if>
+            <if test="pdfFilename != null and pdfFilename != ''">and pdf_filename like concat('%', #{pdfFilename}, '%')</if>
+        </where>
+        order by created_time desc
+    </select>
+    
+    <select id="selectPdfConversionById" parameterType="Long" resultMap="PdfConversionResult">
+        <include refid="selectPdfConversionVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectPdfConversionByAttachmentId" parameterType="Long" resultMap="PdfConversionResult">
+        <include refid="selectPdfConversionVo"/>
+        where attachment_id = #{attachmentId}
+    </select>
+
+    <select id="selectExpiredRecords" resultMap="PdfConversionResult">
+        <include refid="selectPdfConversionVo"/>
+        where last_access_time &lt; DATE_SUB(NOW(), INTERVAL 1 MONTH)
+    </select>
+        
+    <insert id="insertPdfConversion" parameterType="PdfConversion" useGeneratedKeys="true" keyProperty="id">
+        insert into pdf_conversion
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="attachmentId != null">attachment_id,</if>
+            <if test="originalFilename != null and originalFilename != ''">original_filename,</if>
+            <if test="pdfFilename != null and pdfFilename != ''">pdf_filename,</if>
+            <if test="pdfStorePath != null and pdfStorePath != ''">pdf_store_path,</if>
+            <if test="pdfFileSize != null">pdf_file_size,</if>
+            <if test="lastAccessTime != null">last_access_time,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="attachmentId != null">#{attachmentId},</if>
+            <if test="originalFilename != null and originalFilename != ''">#{originalFilename},</if>
+            <if test="pdfFilename != null and pdfFilename != ''">#{pdfFilename},</if>
+            <if test="pdfStorePath != null and pdfStorePath != ''">#{pdfStorePath},</if>
+            <if test="pdfFileSize != null">#{pdfFileSize},</if>
+            <if test="lastAccessTime != null">#{lastAccessTime},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePdfConversion" parameterType="PdfConversion">
+        update pdf_conversion
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="attachmentId != null">attachment_id = #{attachmentId},</if>
+            <if test="originalFilename != null and originalFilename != ''">original_filename = #{originalFilename},</if>
+            <if test="pdfFilename != null and pdfFilename != ''">pdf_filename = #{pdfFilename},</if>
+            <if test="pdfStorePath != null and pdfStorePath != ''">pdf_store_path = #{pdfStorePath},</if>
+            <if test="pdfFileSize != null">pdf_file_size = #{pdfFileSize},</if>
+            <if test="lastAccessTime != null">last_access_time = #{lastAccessTime},</if>
+            <if test="createdTime != null">created_time = #{createdTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateLastAccessTime" parameterType="Long">
+        update pdf_conversion set last_access_time = NOW() where id = #{id}
+    </update>
+
+    <delete id="deletePdfConversionById" parameterType="Long">
+        delete from pdf_conversion where id = #{id}
+    </delete>
+
+    <delete id="deletePdfConversionByIds" parameterType="Long">
+        delete from pdf_conversion where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

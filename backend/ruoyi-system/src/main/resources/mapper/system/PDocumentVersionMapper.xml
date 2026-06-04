@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.PDocumentVersionMapper">
+    
+    <resultMap type="PDocumentVersion" id="PDocumentVersionResult">
+        <result property="id"           column="id"/>
+        <result property="documentId"    column="document_id"/>
+        <result property="attachmentId"    column="attachment_id"/>
+        <result property="versionNumber"    column="version_number"/>
+        <result property="fileName"     column="file_name"/>
+        <result property="filePath"     column="file_path"/>
+        <result property="fileSize"     column="file_size"/>
+        <result property="fileType"     column="file_type"/>
+        <result property="remark"         column="remark"/>
+        <result property="isCurrent"     column="is_current"/>
+        <result property="uploadBy"     column="upload_by"/>
+        <result property="uploadTime"     column="upload_time"/>
+    </resultMap>
+
+    <sql id="selectPDocumentVersionVo">
+        select id, document_id, attachment_id, version_number, file_name, file_path, file_size, file_type, remark, is_current, upload_by, upload_time from p_document_version
+    </sql>
+
+    <select id="selectPDocumentVersionList" parameterType="PDocumentVersion" resultMap="PDocumentVersionResult">
+        <include refid="selectPDocumentVersionVo"/>
+        <where>  
+            <if test="documentId != null"> and document_id = #{documentId}</if>
+            <if test="versionNumber != null and versionNumber != ''"> and version_number = #{versionNumber}</if>
+            <if test="isCurrent != null"> and is_current = #{isCurrent}</if>
+        </where>
+        order by upload_time desc
+    </select>
+    
+    <select id="selectPDocumentVersionById" parameterType="Long" resultMap="PDocumentVersionResult">
+        <include refid="selectPDocumentVersionVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertPDocumentVersion" parameterType="PDocumentVersion" useGeneratedKeys="true" keyProperty="id">
+        insert into p_document_version
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="documentId != null">document_id,</if>
+            <if test="attachmentId != null">attachment_id,</if>
+            <if test="versionNumber != null and versionNumber != ''">version_number,</if>
+            <if test="fileName != null and fileName != ''">file_name,</if>
+            <if test="filePath != null and filePath != ''">file_path,</if>
+            <if test="fileSize != null">file_size,</if>
+            <if test="fileType != null and fileType != ''">file_type,</if>
+            <if test="remark != null">remark,</if>
+            <if test="isCurrent != null">is_current,</if>
+            <if test="uploadBy != null">upload_by,</if>
+            <if test="uploadTime != null">upload_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="documentId != null">#{documentId},</if>
+            <if test="attachmentId != null">#{attachmentId},</if>
+            <if test="versionNumber != null and versionNumber != ''">#{versionNumber},</if>
+            <if test="fileName != null and fileName != ''">#{fileName},</if>
+            <if test="filePath != null and filePath != ''">#{filePath},</if>
+            <if test="fileSize != null">#{fileSize},</if>
+            <if test="fileType != null and fileType != ''">#{fileType},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="isCurrent != null">#{isCurrent},</if>
+            <if test="uploadBy != null">#{uploadBy},</if>
+            <if test="uploadTime != null">#{uploadTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePDocumentVersion" parameterType="PDocumentVersion">
+        update p_document_version
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="documentId != null">document_id = #{documentId},</if>
+            <if test="attachmentId != null">attachment_id = #{attachmentId},</if>
+            <if test="versionNumber != null and versionNumber != ''">version_number = #{versionNumber},</if>
+            <if test="fileName != null and fileName != ''">file_name = #{fileName},</if>
+            <if test="filePath != null and filePath != ''">file_path = #{filePath},</if>
+            <if test="fileSize != null">file_size = #{fileSize},</if>
+            <if test="fileType != null and fileType != ''">file_type = #{fileType},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="isCurrent != null">is_current = #{isCurrent},</if>
+            <if test="uploadBy != null">upload_by = #{uploadBy},</if>
+            <if test="uploadTime != null">upload_time = #{uploadTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePDocumentVersionById" parameterType="Long">
+        delete from p_document_version where id = #{id}
+    </delete>
+
+    <delete id="deletePDocumentVersionByIds" parameterType="Long">
+        delete from p_document_version where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <delete id="deletePDocumentVersionByDocumentId" parameterType="Long">
+        delete from p_document_version where document_id = #{documentId}
+    </delete>
+</mapper>

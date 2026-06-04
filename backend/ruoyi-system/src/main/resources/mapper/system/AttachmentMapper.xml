@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AttachmentMapper">
+    
+    <resultMap type="Attachment" id="AttachmentResult">
+        <result property="id"    column="id"    />
+        <result property="originalName"    column="original_name"    />
+        <result property="storeName"    column="store_name"    />
+        <result property="storePath"    column="store_path"    />
+        <result property="fullUrl"    column="full_url"    />
+        <result property="fileSize"    column="file_size"    />
+        <result property="fileType"    column="file_type"    />
+        <result property="suffix"    column="suffix"    />
+        <result property="uploadBy"    column="upload_by"    />
+        <result property="uploadTime"    column="upload_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectAttachmentVo">
+        select id, original_name, store_name, store_path, full_url, file_size, file_type, suffix, upload_by, upload_time, remark, created_time, updated_time from attachment
+    </sql>
+
+    <select id="selectAttachmentList" parameterType="Attachment" resultMap="AttachmentResult">
+        <include refid="selectAttachmentVo"/>
+        <where>  
+            <if test="originalName != null  and originalName != ''"> and original_name like concat('%', #{originalName}, '%')</if>
+            <if test="storeName != null  and storeName != ''"> and store_name like concat('%', #{storeName}, '%')</if>
+            <if test="fileType != null  and fileType != ''"> and file_type = #{fileType}</if>
+            <if test="suffix != null  and suffix != ''"> and suffix = #{suffix}</if>
+            <if test="uploadBy != null "> and upload_by = #{uploadBy}</if>
+        </where>
+    </select>
+    
+    <select id="selectAttachmentById" parameterType="Long" resultMap="AttachmentResult">
+        <include refid="selectAttachmentVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertAttachment" parameterType="Attachment" useGeneratedKeys="true" keyProperty="id">
+        insert into attachment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="originalName != null and originalName != ''">original_name,</if>
+            <if test="storeName != null and storeName != ''">store_name,</if>
+            <if test="storePath != null and storePath != ''">store_path,</if>
+            <if test="fullUrl != null">full_url,</if>
+            <if test="fileSize != null">file_size,</if>
+            <if test="fileType != null">file_type,</if>
+            <if test="suffix != null">suffix,</if>
+            <if test="uploadBy != null">upload_by,</if>
+            <if test="uploadTime != null">upload_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="originalName != null and originalName != ''">#{originalName},</if>
+            <if test="storeName != null and storeName != ''">#{storeName},</if>
+            <if test="storePath != null and storePath != ''">#{storePath},</if>
+            <if test="fullUrl != null">#{fullUrl},</if>
+            <if test="fileSize != null">#{fileSize},</if>
+            <if test="fileType != null">#{fileType},</if>
+            <if test="suffix != null">#{suffix},</if>
+            <if test="uploadBy != null">#{uploadBy},</if>
+            <if test="uploadTime != null">#{uploadTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAttachment" parameterType="Attachment">
+        update attachment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="originalName != null and originalName != ''">original_name = #{originalName},</if>
+            <if test="storeName != null and storeName != ''">store_name = #{storeName},</if>
+            <if test="storePath != null and storePath != ''">store_path = #{storePath},</if>
+            <if test="fullUrl != null">full_url = #{fullUrl},</if>
+            <if test="fileSize != null">file_size = #{fileSize},</if>
+            <if test="fileType != null">file_type = #{fileType},</if>
+            <if test="suffix != null">suffix = #{suffix},</if>
+            <if test="uploadBy != null">upload_by = #{uploadBy},</if>
+            <if test="uploadTime != null">upload_time = #{uploadTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createdTime != null">created_time = #{createdTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAttachmentById" parameterType="Long">
+        delete from attachment where id = #{id}
+    </delete>
+
+    <delete id="deleteAttachmentByIds" parameterType="String">
+        delete from attachment where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
