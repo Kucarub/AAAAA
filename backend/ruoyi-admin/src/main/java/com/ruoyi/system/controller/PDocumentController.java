@@ -99,11 +99,11 @@ public class PDocumentController extends BaseController
         if (count > 0) {
             return error("资料名称和版本号已存在，不能重复添加");
         }
-        
+
         Date now = new java.util.Date();
         pDocument.setCreatedBy(getUserId());
         pDocument.setCreatedTime(now);
-        
+
         // 插入资料
         int result = pDocumentService.insertPDocument(pDocument);
         if (result > 0) {
@@ -115,7 +115,7 @@ public class PDocumentController extends BaseController
             version.setIsCurrent(1);
             version.setUploadBy(getUserId());
             version.setUploadTime(now);
-            
+
             // 如果有附件ID，关联附件信息
             if (pDocument.getAttachmentId() != null) {
                 Attachment attachment = attachmentService.selectAttachmentById(pDocument.getAttachmentId());
@@ -131,10 +131,10 @@ public class PDocumentController extends BaseController
                 version.setFileName("placeholder");
                 version.setFilePath("placeholder");
             }
-            
+
             pDocumentVersionService.insertPDocumentVersion(version);
         }
-        
+
         return toAjax(result);
     }
 
@@ -152,7 +152,6 @@ public class PDocumentController extends BaseController
     /**
      * 删除资料
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:remove')")
     @Log(title = "资料", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
@@ -195,7 +194,7 @@ public class PDocumentController extends BaseController
             return error("版本不存在");
         }
         PDocumentVersion docVersion = versions.get(0);
-        
+
         PDocument result = new PDocument();
         result.setId(docs.get(0).getId());
         result.setName(docs.get(0).getName());
@@ -204,7 +203,7 @@ public class PDocumentController extends BaseController
         result.setVersion(docVersion.getVersionNumber());
         result.setCreatedBy(docs.get(0).getCreatedBy());
         result.setCreatedTime(docs.get(0).getCreatedTime());
-        
+
         // 获取附件信息
         if (docVersion.getAttachmentId() != null) {
             Attachment attachment = attachmentService.selectAttachmentById(docVersion.getAttachmentId());

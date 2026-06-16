@@ -1,5 +1,6 @@
 package com.ruoyi.system.controller;
 
+import java.io.File;
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -89,7 +90,8 @@ public class PdfConversionController extends BaseController
     {
         try {
             String pdfPath = pdfConversionService.getOrConvertToPdf(attachmentId);
-            String localPath = RuoYiConfig.getProfile() + pdfPath;
+            String pdfRelativePath = FileUtils.stripPrefix(pdfPath);
+            String localPath = RuoYiConfig.getProfile() + File.separator + pdfRelativePath;
             PdfConversion conversion = pdfConversionService.selectPdfConversionByAttachmentId(attachmentId);
             String filename = conversion != null ? conversion.getPdfFilename() : "document.pdf";
             response.setContentType("application/pdf");
@@ -108,7 +110,8 @@ public class PdfConversionController extends BaseController
     {
         try {
             String pdfPath = pdfConversionService.getOrConvertToPdf(attachmentId);
-            String localPath = RuoYiConfig.getProfile() + pdfPath;
+            String pdfRelativePath = FileUtils.stripPrefix(pdfPath);
+            String localPath = RuoYiConfig.getProfile() + File.separator + pdfRelativePath;
             PdfConversion conversion = pdfConversionService.selectPdfConversionByAttachmentId(attachmentId);
             String filename = conversion != null ? conversion.getPdfFilename() : "document";
             

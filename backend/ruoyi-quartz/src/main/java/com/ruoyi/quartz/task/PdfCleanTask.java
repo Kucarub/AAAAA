@@ -10,6 +10,7 @@ import com.ruoyi.common.utils.file.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -45,7 +46,8 @@ public class PdfCleanTask
                     try {
                         // 删除文件
                         if (conversion.getPdfStorePath() != null) {
-                            String localPath = RuoYiConfig.getProfile() + conversion.getPdfStorePath();
+                            String pdfRelativePath = FileUtils.stripPrefix(conversion.getPdfStorePath());
+                            String localPath = RuoYiConfig.getProfile() + File.separator + pdfRelativePath;
                             boolean deleted = FileUtils.deleteFile(localPath);
                             log.info("删除PDF文件：{}，结果：{}", localPath, deleted);
                         }

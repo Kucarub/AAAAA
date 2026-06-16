@@ -23,6 +23,23 @@
             <artifactId>ruoyi-common</artifactId>
         </dependency>
 
+        <!-- documents4j 用于文档转 PDF -->
+        <dependency>
+            <groupId>com.documents4j</groupId>
+            <artifactId>documents4j-local</artifactId>
+            <version>1.1.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.documents4j</groupId>
+            <artifactId>documents4j-transformer-msoffice-word</artifactId>
+            <version>1.1.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.documents4j</groupId>
+            <artifactId>documents4j-transformer-msoffice-excel</artifactId>
+            <version>1.1.12</version>
+        </dependency>
+
     </dependencies>
 
 </project>
