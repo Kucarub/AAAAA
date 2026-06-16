@@ -55,6 +55,9 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
+          <el-button link type="primary" icon="View" v-if="scope.row.attachmentId"
+                     @click="handlePdfPreview(scope.row)">预览
+          </el-button>
           <el-button link type="primary" icon="Download" v-if="scope.row.filePath && scope.row.filePath!=='placeholder'"
                      @click="handleDownload(scope.row)">下载附件
           </el-button>
@@ -75,10 +78,29 @@
       </div>
     </template>
   </el-dialog>
+
+  <!-- 附件预览对话框 -->
+  <el-dialog
+      v-model="pdfDialogVisible"
+      title="附件预览"
+      width="80%"
+      top="5vh"
+      :close-on-click-modal="false"
+      destroy-on-close
+  >
+    <div style="height: 70vh; overflow: hidden;">
+      <iframe
+          v-if="pdfUrl"
+          :src="pdfUrl"
+          style="width: 100%; height: 100%; border: none;"
+      ></iframe>
+      <el-empty v-else description="暂无附件"></el-empty>
+    </div>
+  </el-dialog>
 </template>
 
 <script setup>
-import {listDocument, getDocumentVersions, getDocumentDetailByNameAndVersion} from "@/api/mamage/document"
+import {listDocument, getDocumentVersions, getDocumentDetailByNameAndVersion, getOrConvertPdf} from "@/api/mamage/document"
 
 const {proxy} = getCurrentInstance()
 
@@ -97,6 +119,8 @@ const queryParams = ref({
   pageSize: 10
 })
 const originalTableData = ref([])
+const pdfDialogVisible = ref(false)
+const pdfUrl = ref('')
 
 function reset() {
   tableData.value = []
@@ -162,6 +186,29 @@ function handleDownload(row) {
     window.open(url)
   } else {
     proxy.$modal.msgWarning('暂无附件可下载')
+  }
+}
+
+/** 预览附件 */
+async function handlePdfPreview(row) {
+  if (!row.attachmentId) {
+    proxy.$modal.msgWarning('该资料无附件可预览')
+    return
+  }
+
+  loading.value = true
+  
+  try {
+    // 先调用转换接口确保PDF已生成
+    await getOrConvertPdf(row.attachmentId)
+    
+    // 设置预览URL
+    pdfUrl.value = import.meta.env.VITE_APP_BASE_API + '/system/pdf/preview/' + row.attachmentId
+    pdfDialogVisible.value = true
+  } catch (error) {
+    proxy.$modal.msgError('转换或预览失败：' + (error.message || '未知错误'))
+  } finally {
+    loading.value = false
   }
 }
 

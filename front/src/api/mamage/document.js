@@ -67,3 +67,11 @@ export function getOrConvertPdf(attachmentId) {
     method: 'get'
   })
 }
+
+// 获取或转换PDF
+export function getPdfInfo(attachmentId) {
+  return request({
+    url: '/system/pdf/' + attachmentId,
+    method: 'get'
+  })
+}

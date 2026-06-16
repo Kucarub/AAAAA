@@ -39,7 +39,7 @@
       </el-table-column>
       <el-table-column label="附件" align="center" prop="fileName">
         <template #default="scope">
-          <span>{{ scope.row.fileName && scope.row.fileName !== 'placeholder' ? scope.row.fileName : '-' }}</span>
+          <span class="remark-link" @click="handlePdfPreview(scope.row)">{{ scope.row.fileName && scope.row.fileName !== 'placeholder' ? scope.row.fileName : '-' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="版本号" align="center" prop="version"/>
@@ -55,12 +55,9 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" v-if="scope.row.attachmentId" @click="handlePdfPreview(scope.row)">预览
-          </el-button>
           <el-button link type="primary" icon="Download" v-if="scope.row.filePath" @click="handleDownload(scope.row)">下载
           </el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"
-                     v-hasPermi="['mamage:document:remove']">删除
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)">删除
           </el-button>
         </template>
       </el-table-column>
@@ -172,15 +169,26 @@ function handleDownload(row) {
 }
 
 /** 预览附件 */
-function handlePdfPreview(row) {
+async function handlePdfPreview(row) {
   if (!row.attachmentId) {
     proxy.$modal.msgWarning('该资料无附件可预览')
     return
   }
-  
-  // 直接预览
-  pdfUrl.value = import.meta.env.VITE_APP_BASE_API + '/system/pdf/preview/' + row.attachmentId
-  pdfDialogVisible.value = true
+
+  loading.value = true
+
+  try {
+    // 先调用转换接口确保PDF已生成
+    await getOrConvertPdf(row.attachmentId)
+
+    // 设置预览URL
+    pdfUrl.value = import.meta.env.VITE_APP_BASE_API + '/system/pdf/preview/' + row.attachmentId
+    pdfDialogVisible.value = true
+  } catch (error) {
+    proxy.$modal.msgError('转换或预览失败：' + (error.message || '未知错误'))
+  } finally {
+    loading.value = false
+  }
 }
 
 /** 判断是否是URL链接 */
