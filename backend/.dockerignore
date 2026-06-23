@@ -1,0 +1,8 @@
+.git
+.gitignore
+README.md
+target/
+*.md
+*.log
+node_modules/
+dist/

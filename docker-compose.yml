@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ruoyi-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: ry-vue
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/sql:/docker-entrypoint-initdb.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    networks:
+      - ruoyi-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ruoyi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ruoyi-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ruoyi-backend
+    ports:
+      - "18080:18080"
+    volumes:
+      - ./backend/ruoyi-admin/src/main/resources:/ruoyi/resources
+      - upload-data:/ruoyi/uploadPath
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ry-vue?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ruoyi-network
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: ruoyi-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - ruoyi-network
+
+volumes:
+  mysql-data:
+  redis-data:
+  upload-data:
+
+networks:
+  ruoyi-network:
+    driver: bridge
