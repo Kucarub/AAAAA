@@ -57,7 +57,10 @@ export default defineConfig(({ mode, command }) => {
           target: baseUrl,
           changeOrigin: true,
         }
-      }
+      },
+      allowedHosts: [
+        'silent-sell-liability-tin.trycloudflare.com'
+      ]
     },
     css: {
       postcss: {

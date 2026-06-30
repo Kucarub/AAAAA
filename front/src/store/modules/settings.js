@@ -2,7 +2,7 @@ import defaultSettings from '@/settings'
 import { useDark, useToggle } from '@vueuse/core'
 import { useDynamicTitle } from '@/utils/dynamicTitle'
 
-const isDark = useDark()
+const isDark = useDark({ value: { default: false } })
 const toggleDark = useToggle(isDark)
 
 const { sideTheme, showSettings, navType, tagsView, tagsViewPersist, tagsIcon, fixedHeader, sidebarLogo, dynamicTitle, footerVisible, footerContent } = defaultSettings
