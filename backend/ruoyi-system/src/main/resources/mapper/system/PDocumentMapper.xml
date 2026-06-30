@@ -87,6 +87,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         inner join p_document_version pdv on pd.id = pdv.document_id
         where pd.name = #{name} 
         and pdv.version_number = #{version}
+        <if test="projectId != null">
+            and pd.project_id = #{projectId}
+        </if>
         <if test="id != null">
             and pd.id != #{id}
         </if>
@@ -98,6 +101,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 WHERE document_id = pd.id 
                 ORDER BY upload_time DESC 
                 LIMIT 1) as version, 
+               (SELECT attachment_id FROM p_document_version 
+                WHERE document_id = pd.id 
+                ORDER BY upload_time DESC 
+                LIMIT 1) as attachment_id, 
                (SELECT file_path FROM p_document_version 
                 WHERE document_id = pd.id 
                 ORDER BY upload_time DESC 
@@ -174,6 +181,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         LEFT JOIN sys_user su ON pd.created_by = su.user_id
         <where>
             <if test="name != null and name != ''">and pd.name like concat('%', #{name}, '%')</if>
+            <if test="projectName != null and projectName != ''">and pj.name like concat('%', #{projectName}, '%')</if>
         </where>
         ORDER BY pd.created_time DESC
     </select>

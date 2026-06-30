@@ -64,6 +64,7 @@ export function getDocumentDetailByNameAndVersion(name, version) {
 export function getOrConvertPdf(attachmentId) {
   return request({
     url: '/system/pdf/convert/' + attachmentId,
+    timeout:0,
     method: 'get'
   })
 }

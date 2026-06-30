@@ -1,23 +1,6 @@
 <template>
   <el-dialog :title="title" center v-model="open" width="80%" append-to-body @close="handleClose">
     <div style="margin-bottom: 20px;">
-      <el-form inline>
-        <el-form-item label="版本选择">
-          <el-select v-model="selectedVersion" placeholder="请选择版本" @change="handleVersionChange" clearable
-                     style="width: 200px;">
-            <el-option
-                label="最新版本"
-                value=""
-            />
-            <el-option
-                v-for="v in allVersionList"
-                :key="v"
-                :label="v"
-                :value="v"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
     </div>
 
     <el-table v-loading="loading" :data="tableData">
@@ -38,8 +21,7 @@
       </el-table-column>
       <el-table-column label="附件" align="center" prop="fileName">
         <template #default="scope">
-          <span v-if="scope.row.fileName && scope.row.fileName !== 'placeholder'">{{ scope.row.fileName }}</span>
-          <span v-else>--</span>
+          <span class="remark-link" @click="handlePdfPreview(scope.row)">{{ scope.row.fileName && scope.row.fileName !== 'placeholder' ? scope.row.fileName : '-' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="版本号" align="center" prop="version"/>
@@ -48,20 +30,34 @@
           <span>{{ scope.row.nickName || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createdTime">
+<!--      <el-table-column label="创建时间" align="center" prop="createdTime">
         <template #default="scope">
           <span>{{ scope.row.createdTime ? parseTime(scope.row.createdTime) : '-' }}</span>
         </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      </el-table-column>-->
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
         <template #default="scope">
-          <el-button link type="primary" icon="View" v-if="scope.row.attachmentId"
-                     @click="handlePdfPreview(scope.row)">预览
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)">修改
           </el-button>
-          <el-button link type="primary" icon="Download" v-if="scope.row.filePath && scope.row.filePath!=='placeholder'"
-                     @click="handleDownload(scope.row)">下载附件
+          <el-button link type="primary" icon="Download" v-if="scope.row.attachmentId"
+                     @click="handleDownload(scope.row)">下载
           </el-button>
-          <span v-else>--</span>
+          <el-popover
+              v-if="canShare(scope.row)"
+              placement="top"
+              :width="180"
+              trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="Share">分享</el-button>
+            </template>
+            <div style="text-align: center;">
+              <img :src="getQrCodeUrl(scope.row)" alt="二维码" style="width: 150px; height: 150px;">
+              <p style="margin-top: 8px; font-size: 12px; color: #666;">扫码查看资料</p>
+            </div>
+          </el-popover>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)">删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -97,10 +93,38 @@
       <el-empty v-else description="暂无附件"></el-empty>
     </div>
   </el-dialog>
+
+  <!-- 修改资料对话框 -->
+  <el-dialog
+      v-model="editDialogVisible"
+      :title="editTitle"
+      width="500px"
+      :close-on-click-modal="false"
+      destroy-on-close
+  >
+    <el-form ref="editRef" :model="editFormData" :rules="editRules" label-width="80px">
+      <el-form-item label="资料名称" prop="name">
+        <el-input v-model="editFormData.name" placeholder="请输入资料名称"/>
+      </el-form-item>
+      <el-form-item label="资料描述" prop="description">
+        <el-input v-model="editFormData.description" type="textarea" :rows="3" placeholder="请输入资料描述"/>
+      </el-form-item>
+      <el-form-item label="资料备注" prop="remark">
+        <el-input v-model="editFormData.remark" type="textarea" :rows="3" placeholder="请输入资料备注"/>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="cancelEdit">取消</el-button>
+        <el-button type="primary" @click="submitEdit">确认</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import {listDocument, getDocumentVersions, getDocumentDetailByNameAndVersion, getOrConvertPdf} from "@/api/mamage/document"
+import {listDocument, getDocument, updateDocument, delDocument, getOrConvertPdf} from "@/api/mamage/document"
+import QRCode from 'qrcode'
 
 const {proxy} = getCurrentInstance()
 
@@ -121,6 +145,17 @@ const queryParams = ref({
 const originalTableData = ref([])
 const pdfDialogVisible = ref(false)
 const pdfUrl = ref('')
+const editDialogVisible = ref(false)
+const editOpen = ref(false)
+const editTitle = ref('')
+const qrCodeMap = ref({})
+
+const editFormData = reactive({
+  id: undefined,
+  name: undefined,
+  description: undefined,
+  remark: undefined
+})
 
 function reset() {
   tableData.value = []
@@ -158,6 +193,9 @@ async function getDocumentList() {
 
     // 按版本过滤
     applyVersionFilter()
+
+    // 预生成可分享资料的二维码
+    await generateQrCodes()
   } finally {
     loading.value = false
   }
@@ -197,11 +235,11 @@ async function handlePdfPreview(row) {
   }
 
   loading.value = true
-  
+
   try {
     // 先调用转换接口确保PDF已生成
     await getOrConvertPdf(row.attachmentId)
-    
+
     // 设置预览URL
     pdfUrl.value = import.meta.env.VITE_APP_BASE_API + '/system/pdf/preview/' + row.attachmentId
     pdfDialogVisible.value = true
@@ -241,6 +279,106 @@ function splitRemark(text) {
   }
 
   return result.length > 0 ? result : [text]
+}
+
+/** 删除按钮操作 */
+function handleDelete(row) {
+  const _ids = row.id
+  proxy.$modal.confirm('是否确认删除资料？').then(function () {
+    return delDocument(_ids)
+  }).then(() => {
+    getDocumentList()
+    proxy.$modal.msgSuccess("删除成功")
+  }).catch(() => {
+  })
+}
+
+/** 从备注中提取第一个URL */
+function extractUrl(remark) {
+  if (!remark) return null
+  const match = remark.match(/(https?:\/\/[^\s]+)/i)
+  return match ? match[0] : null
+}
+
+/** 判断资料是否可以分享（描述含"在线"且备注中有URL） */
+function canShare(row) {
+  if (!row.description || !row.remark) return false
+  return row.description.includes('在线') && extractUrl(row.remark) !== null
+}
+
+/** 获取二维码图片URL */
+function getQrCodeUrl(row) {
+  return qrCodeMap.value[row.id] || ''
+}
+
+/** 预生成所有可分享资料的二维码 */
+async function generateQrCodes() {
+  const map = {}
+  const promises = tableData.value
+    .filter(row => canShare(row))
+    .map(async row => {
+      const url = extractUrl(row.remark)
+      if (url) {
+        try {
+          map[row.id] = await QRCode.toDataURL(url, { width: 150, margin: 1 })
+        } catch (e) {
+          console.error('生成二维码失败', e)
+        }
+      }
+    })
+  await Promise.all(promises)
+  qrCodeMap.value = map
+}
+
+const editRef = ref(null)
+
+const editRules = {
+  name: [
+    { required: true, message: '资料名称不能为空', trigger: 'blur' }
+  ]
+}
+
+/** 修改按钮操作 */
+function handleUpdate(row) {
+  editFormData.id = row.id
+  editTitle.value = '修改资料 - ' + (row.name || '')
+  editDialogVisible.value = true
+  editOpen.value = true
+
+  editFormData.name = row.name || ''
+  editFormData.description = row.description || ''
+  editFormData.remark = row.remark || ''
+}
+
+/** 取消修改 */
+function cancelEdit() {
+  editDialogVisible.value = false
+  editOpen.value = false
+  resetEditForm()
+}
+
+/** 重置编辑表单 */
+function resetEditForm() {
+  editFormData.id = undefined
+  editFormData.name = undefined
+  editFormData.description = undefined
+  editFormData.remark = undefined
+  editRef.value?.resetFields()
+}
+
+/** 提交修改 */
+function submitEdit() {
+  editRef.value.validate(valid => {
+    if (valid) {
+      updateDocument(editFormData).then(() => {
+        proxy.$modal.msgSuccess('修改成功')
+        editDialogVisible.value = false
+        editOpen.value = false
+        getDocumentList()
+      }).catch(() => {
+      })
+    }
+  })
 }
 
 function openDialog(type, row) {

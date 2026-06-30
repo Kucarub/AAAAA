@@ -49,7 +49,6 @@ public class PDocumentController extends BaseController
     /**
      * 查询资料列表
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:list')")
     @GetMapping("/list")
     public TableDataInfo list(PDocument pDocument) {
         startPage();
@@ -65,7 +64,6 @@ public class PDocumentController extends BaseController
     /**
      * 导出资料列表
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:export')")
     @Log(title = "资料", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, PDocument pDocument)
@@ -78,7 +76,6 @@ public class PDocumentController extends BaseController
     /**
      * 获取资料详细信息
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
@@ -88,7 +85,6 @@ public class PDocumentController extends BaseController
     /**
      * 新增资料
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:add')")
     @Log(title = "资料", businessType = BusinessType.INSERT)
     @PostMapping
     @Transactional(rollbackFor = Exception.class)
@@ -141,7 +137,6 @@ public class PDocumentController extends BaseController
     /**
      * 修改资料
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:edit')")
     @Log(title = "资料", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody PDocument pDocument)
@@ -162,7 +157,6 @@ public class PDocumentController extends BaseController
     /**
      * 查询资料的所有版本
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:list')")
     @GetMapping("/versions/{documentId}")
     public AjaxResult getVersions(@PathVariable Long documentId)
     {
@@ -175,7 +169,6 @@ public class PDocumentController extends BaseController
     /**
      * 根据资料名称和版本号查询资料详情
      */
-    @PreAuthorize("@ss.hasPermi('mamage:document:list')")
     @GetMapping("/detail")
     public AjaxResult getDetailByNameAndVersion(String name, String version)
     {
